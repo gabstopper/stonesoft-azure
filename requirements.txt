@@ -1,0 +1,2 @@
+-e git+https://github.com/gabstopper/smc-python.git#egg=smc-python
+azure-mgmt-resource==1.1.0

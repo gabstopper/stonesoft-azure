@@ -1,0 +1,8 @@
+{
+  "itemDisplayName": "Create a DHCP single interface Stonesoft NGFW",
+  "description": "This template creates a single instance FW that acts as an internet gateway. The single interface will have a public address and provide all management
+  functionality through the Stonesoft Management Center",
+  "summary": "Forcepoint NGFW single interface gateway firewall",
+  "githubUsername": "gabstopper",
+  "dateUpdated": "2017-05-26"
+}

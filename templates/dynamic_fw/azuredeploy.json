@@ -1,0 +1,335 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "engineUsername": {
+            "type": "string",
+            "metadata": {
+                "description" : "Engine username"
+            }
+        },
+        "sshKey": {
+            "type": "string",
+            "metadata": {
+                "description" : "Engine username public ssh key"
+            }
+        },
+        "engineVMSize": {
+            "type": "string",
+            "allowedValues": [
+                "Standard_DS2"
+            ],
+            "defaultValue": "Standard_DS2",
+            "metadata":
+            {
+                "description" : "Size of the VM used by Engine"
+            }
+        },
+        "engineCfg" : {
+            "type": "string",
+            "metadata": {
+                "description" : "base64 encoded engine.cfg content"
+            }
+        }
+    },
+    "variables": {
+        "instanceKey": "[uniqueString(resourceGroup().id, deployment().name)]",
+        "prefix": "forcepoint-ngfw-",
+        "subprefixes": {
+            "securityNetwork": "[concat(variables('prefix'), 'security-')]",
+            "frontNetwork": "[concat(variables('prefix'), 'front-')]",
+            "backNetwork": "[concat(variables('prefix'), 'back-')]"
+        },
+        "engine": {
+            "vmName": "[concat(variables('prefix'),'vm')]",
+            "osDiskName": "[concat(variables('prefix'),'osDisk')]",
+            "caching": "ReadWrite",
+            "vnet": {
+                "name": "[concat(variables('prefix'), 'vnet')]",
+                "addressPrefix": "192.168.0.0/16"
+            },
+            "securityNetwork": {
+                "interfaceName": "[concat(variables('subprefixes').securityNetwork, 'interface')]",
+                "subnet": {
+                    "name": "[concat(variables('subprefixes').securityNetwork, 'subnet')]",
+                    "addressPrefix": "192.168.0.0/24",
+                    "gatewayIp": "192.168.0.4"
+                }
+            },
+            "frontNetwork": {
+                "subnet": {
+                    "name": "[concat(variables('subprefixes').frontNetwork, 'subnet')]",
+                    "addressPrefix": "192.168.1.0/24"
+                }
+            },
+            "backNetwork": {
+                "subnet": {
+                    "name": "[concat(variables('subprefixes').backNetwork, 'subnet')]",
+                    "addressPrefix": "192.168.2.0/24"
+                }
+            },
+            "publicIpAddress": {
+                "name": "[concat(variables('prefix'), 'publicIp')]",
+                "dnsPrefix": "[concat(variables('prefix'), variables('instanceKey'))]"
+            },
+            "defaultNSGName": "[concat(variables('prefix'), 'nsg')]",
+            "routeTableName": "[concat(variables('prefix'), 'routeTable')]",
+            "diagStorageAccountName": "[concat(variables('instanceKey'), 'diagstorage')]"
+
+        },
+        "resourceIds" : {
+            "securityNetwork":{
+                "interface" :"[resourceId('Microsoft.Network/networkInterfaces', variables('engine').securityNetwork.interfaceName)]",
+                "subnet": "[concat(resourceId('Microsoft.Network/virtualNetworks',variables('engine').vnet.name), '/subnets/', variables('engine').securityNetwork.subnet.name)]"
+            },
+            "frontEndSubnet" : "[concat(resourceId('Microsoft.Network/virtualNetworks',variables('engine').vnet.name), '/subnets/', variables('engine').frontNetwork.subnet.name)]",
+            "backEndSubnet" : "[concat(resourceId('Microsoft.Network/virtualNetworks',variables('engine').vnet.name), '/subnets/', variables('engine').backNetwork.subnet.name)]",
+            "publicIp": "[resourceId('Microsoft.Network/publicIpAddresses', variables('engine').publicIpAddress.name)]",
+            "defaultNSG" : "[resourceId('Microsoft.Network/networkSecurityGroups', variables('engine').defaultNSGName)]",
+            "routeTable" : "[resourceId('Microsoft.Network/routeTables', variables('engine').routeTableName)]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('engine').diagStorageAccountName]",
+            "apiVersion": "2016-01-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "kind": "Storage",
+            "properties": {}
+        },
+        {
+            "name": "[variables('engine').vmName]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2016-04-30-preview",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[variables('engine').securityNetwork.interfaceName]"
+            ],
+            "properties": {
+                "osProfile": {
+                    "computerName": "[variables('engine').vmName]",
+                    "adminUsername": "[parameters('engineUsername')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication" : true,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "[concat('/home/', parameters('engineUsername'), '/.ssh/authorized_keys')]",
+                                    "keyData": "[parameters('sshKey')]"
+                                }
+                            ]
+                        }
+                   },
+                   "customData": "[parameters('engineCfg')]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('engineVMSize')]"
+                },
+                "storageProfile": {
+                    "imageReference" : {
+                        "id": "/subscriptions/0d20e5f2-30c1-4557-b114-219d053e2df4/resourceGroups/march-rg/providers/Microsoft.Compute/images/ngfw"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "properties" : {
+                                "primary" : true
+                            },
+                            "id": "[variables('resourceIds').securityNetwork.interface]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile":{
+                    "bootDiagnostics":{
+                        "enabled" :true,
+                        "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('engine').diagStorageAccountName), '2016-01-01').primaryEndpoints.blob)]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "[variables('engine').securityNetwork.interfaceName]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[variables('engine').vnet.name]",
+                "[variables('engine').publicIpAddress.name]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('resourceIds').securityNetwork.subnet]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('engine').securityNetwork.subnet.gatewayIp]",
+                            "publicIpAddress": {
+                                "id": "[variables('resourceIds').publicIp]"
+                            }
+                        }
+                    }
+                ],
+                "enableIPForwarding": true,
+                "networkSecurityGroup": {
+                    "id": "[variables('resourceIds').defaultNSG]"
+                }
+            }
+        },
+        {
+            "name": "[variables('engine').publicIpAddress.name]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('engine').publicIpAddress.dnsPrefix]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('engine').vnet.name]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[variables('engine').defaultNSGName]",
+                "[variables('engine').routeTableName]"
+            ],
+            "properties": {
+                "addressSpace" : {
+                    "addressPrefixes": [
+                        "[variables('engine').vnet.addressPrefix]"
+                    ]
+                },
+                "subnets" : [
+                    {
+                        "name": "[variables('engine').securityNetwork.subnet.name]",
+                        "properties": {
+                            "addressPrefix": "[variables('engine').securityNetwork.subnet.addressPrefix]",
+                            "networkSecurityGroup": {
+                                "id": "[variables('resourceIds').defaultNSG]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "[variables('engine').frontNetwork.subnet.name]",
+                        "properties": {
+                            "addressPrefix": "[variables('engine').frontNetwork.subnet.addressPrefix]",
+                            "routeTable": {
+                                "id": "[variables('resourceIds').routeTable]"
+                            },
+                            "networkSecurityGroup": {
+                                "id": "[variables('resourceIds').defaultNSG]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "[variables('engine').backNetwork.subnet.name]",
+                        "properties": {
+                            "addressPrefix": "[variables('engine').backNetwork.subnet.addressPrefix]",
+                            "routeTable": {
+                                "id": "[variables('resourceIds').routeTable]"
+                            },
+                            "networkSecurityGroup": {
+                                "id": "[variables('resourceIds').defaultNSG]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type" : "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2016-03-30",
+            "name": "[variables('engine').defaultNSGName]",
+            "location" : "[resourceGroup().location]",
+            "properties" : {
+                "securityRules" :[
+                    {
+                        "name": "Allow-any-inbound",
+                        "properties": {
+                            "access" :"Allow",
+                            "description": "Allow any traffic",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "*",
+                            "direction" :"Inbound",
+                            "priority" : 100,
+                            "protocol" :"*",
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*"
+                        }
+                    },
+                    {
+                        "name": "Allow-any-outboud",
+                        "properties": {
+                            "access" :"Allow",
+                            "description": "Allow any traffic, usefull to emit traffic from securityNetwork to other subnet with public src ips",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "*",
+                            "direction" :"Outbound",
+                            "priority" : 100,
+                            "protocol" :"*",
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "apiVersion": "2017-03-01",
+            "location" : "[resourceGroup().location]",
+            "name": "[variables('engine').routeTableName]",
+            "properties": {
+                "routes" :[
+                    {
+                        "name": "route-between-protected-subnets-via-NGFW",
+                        "properties": {
+                            "addressPrefix": "[variables('engine').vnet.addressPrefix]",
+                            "nextHopIpAddress": "[variables('engine').securityNetwork.subnet.gatewayIp]",
+                            "nextHopType": "VirtualAppliance" 
+                        }
+                    },
+                    {
+                        "name": "route-from-protected-subnets-to-internet-via-NGFW",
+                        "properties": {
+                            "addressPrefix": "0.0.0.0/0",
+                            "nextHopIpAddress": "[variables('engine').securityNetwork.subnet.gatewayIp]",
+                            "nextHopType": "VirtualAppliance"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "hostFQDN": {
+            "type": "string",
+            "value" : "[reference(variables('resourceIds').publicIp).dnsSettings.fqdn]"
+        },
+        "publicIp" : {
+            "type": "string",
+            "value" : "[reference(variables('resourceIds').publicIp).ipAddress]"
+        },
+        "frontEndSubnetReferenceId" : {
+            "type": "string",
+            "value": "[variables('resourceIds').frontEndSubnet]"
+        },
+        "backEndSubnetReferenceId" : {
+            "type": "string",
+            "value": "[variables('resourceIds').backEndSubnet]"
+        }
+
+
+    }
+}

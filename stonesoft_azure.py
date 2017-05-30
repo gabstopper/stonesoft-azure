@@ -18,7 +18,7 @@ from smc.elements.helpers import location_helper
 from smc.elements.network import Network
 from msrestazure.azure_exceptions import CloudError
 from smc.policy.layer3 import FirewallPolicy
-from smc.api.exceptions import ElementNotFound
+from smc.api.exceptions import ElementNotFound, DeleteElementFailed
 from azure.mgmt.resource.resources.v2017_05_10.models.template_link import TemplateLink
 from azure.mgmt.resource.subscriptions.v2016_06_01.subscription_client import SubscriptionClient
 
@@ -82,6 +82,12 @@ def provision_stonesoft(name, vnet=None, location=None):
         dynamic_index=1,
         default_nat=False,
         location_ref=location_helper(location))
+    
+    itf = engine.routing.get(0)
+    for network in itf:
+        routing_node = network.data['routing_node'][0]
+        routing_node['dynamic_classid'] = 'gateway'
+        network.update()
     
     # License and Save Initial Configuration
     node = engine.nodes[0]
@@ -232,8 +238,8 @@ def destroy(namespace):
         session.login()
         try:
             Layer3Firewall(namespace.resource_group).delete()
-        except ElementNotFound:
-            pass
+        except (ElementNotFound, DeleteElementFailed) as e:
+            logger.error('Problem deleting engine: {}'.format(e))
         session.logout()
         return poller.result(timeout=10)
 

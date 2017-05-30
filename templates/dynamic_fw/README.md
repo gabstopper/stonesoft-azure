@@ -25,4 +25,10 @@ Use the ``--engine_location`` parameter to specify the name of the Location and 
     --location_id westeurope \
 ```  
 
+Once complete, SSH will work to the public address of the NGFW (make sure you have a rule allowing SSH).
+
+ssh user@{stonesoft_azure_fw}
+
+
+
 

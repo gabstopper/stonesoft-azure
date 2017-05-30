@@ -65,7 +65,7 @@ Features:
 
     Your machine will need an SSH public key when creating the deployment to enable remote access to the NGFW and clients. The script will look for the public key in ``~/.ssh/id_rsa.pub``. This key will be used in the parameters template to deploy to the virtual machine/s.
 
-    See Microsoft Azure documentation with instructions on creating your own key: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys?toc=%2fazure%2fvirtual-machines%2flinux%2ftoc.json
+    For more information on creaging Azure keys, see: [Microsoft Azure documentation](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys?toc=azurevirtual-machineslinuxtoc.json).
 
     For Mac/Linux it's as easy as:
 

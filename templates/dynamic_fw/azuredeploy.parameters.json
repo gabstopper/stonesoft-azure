@@ -1,0 +1,15 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {  
+        "engineUsername": {
+            "value": "dlepage"
+        },
+        "sshKey": {
+            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCZo6V0rZF8vjkb5qtYNbxcXuc6FqXFp50/P4gWzencwEoqiesNwK3221cVpJ03D4OeEBzzOwkZeaVKvOYVVLzOYfAkFHrHWgNC2zmI6ch0iKlPF8iEQLk90MKoz8bUFtQbRme3q21jHcm4GLj7jlPp3gF6du9ZuMlDetihp2CGdVFghS2xiYMwMjJrwRFZMZ00Yf9xmA9t0JdlxXGsh34CBqhIfS3gDyQEmV2a//HCQxV8CKoSoygdz4sECnO+b6ZuaLkIShzMn3t4jZyYU6s9VvUhHc3+/Niiv3T60KOj7rZOpGWjiPFWfR2fuU99RuGmryylSJMYoX4mxGrmKFGZ davidlepage@Davids-MacBook-Pro.local"
+        },
+        "engineCfg" : {
+            "value": "Iw0KIyBGT1JDRVBPSU5UIEVuZ2luZSBJbml0aWFsIENvbmZpZ3VyYXRpb24NCiMgbWFzdGVyDQojDQoNCnN0b25lZ2F0ZS9zeXN0ZW0vaG9zdG5hbWUgc3RyaW5nIG1hc3Rlcg0Kc3RvbmVnYXRlL3N5c3RlbS90eXBlIHN0cmluZyBmdw0KIA0Kc3RvbmVnYXRlL21nbXQvbWFuYWdlbWVudC1hZGRyZXNzIHN0cmluZyAxNzIuMTguMS4xNTANCnN0b25lZ2F0ZS9tZ210L2ZpbmdlcnByaW50IHN0cmluZyA0QzowMzpBRDo4MTowMjpENzo4NjpBODpCNToxQTo1QzpBNDo1NTpFRDowNTo1RQ0Kc3RvbmVnYXRlL21nbXQvZmluZ2VycHJpbnQtc2hhIHN0cmluZyA2RDo3MzowODpBNzozRjpFMjo0NjoyRTowNTo2Qzo0NjpCRTozRjpENjowNjowRjowNDpDRTowQzpGMzozNzozNDpFNjowNjo1MjowQTpCNzowQjoxRTo3Rjo4RDpDNzo0MTpEMzo0RTpFMDpGRTo2RjpDRTpDOTo5QzpERTozRjo3Mzo2Mzo1OTpGNzo4NjpGNjpDNTpCMDpGRjpFMDpDNjo0RTo0QzpFRjoxMDo1RjpGQTo4QjpFNDoxRjo3Qw0Kc3RvbmVnYXRlL21nbXQvc2VjdXJpdHktc3RyZW5ndGggYm9vbGVhbiBmYWxzZQ0KDQpzdG9uZWdhdGUvbWdtdC9vbmUtdGltZS1wYXNzd29yZCBzdHJpbmcgN0c3eVRLeUNBV01KQllEcGtQcksNCnN0b25lZ2F0ZS9tZ210L25pYy1pZCBzdHJpbmcgMA0Kc3RvbmVnYXRlL21nbXQvZGlzYWJsZS13ZWJjb25mIGJvb2xlYW4gdHJ1ZQ0Kc3RvbmVnYXRlL25ldHdvcmsvaXBhZGRyIHN0cmluZyAxNzIuMTguMS44MA0Kc3RvbmVnYXRlL25ldHdvcmsvbmV0bWFzayBzdHJpbmcgMjU1LjI1NS4yNTUuMA0Kc3RvbmVnYXRlL25ldHdvcmsvcHJlZml4IHN0cmluZyAyNA0Kc3RvbmVnYXRlL25ldHdvcmsvbmV0d29yayBzdHJpbmcgMTcyLjE4LjEuMA0Kc3RvbmVnYXRlL25ldHdvcmsvYnJvYWRjYXN0IHN0cmluZyAxNzIuMTguMS4yNTUNCg0Kc3RvbmVnYXRlL3N5c3RlbS90aW1lem9uZSBzdHJpbmcgQW1lcmljYS9DaGljYWdvDQpzdG9uZWdhdGUvc3lzdGVtL2tleW1hcCBzdHJpbmcgaTM4Ni9xd2VydHkvdWsNCnN0b25lZ2F0ZS9zc2gvZW5hYmxlZCBib29sZWFuIGZhbHNlDQo="
+        }
+    }
+}

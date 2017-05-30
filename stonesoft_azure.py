@@ -213,7 +213,7 @@ def create(namespace):
             logger.error(task.last_message)
 
         for k, v in result.properties.outputs.items():
-            print('Attribute: %s, Value: %s', k, v.get('value'))
+            logger.info(k, v.get('value'))
              
     except CloudError:
         Layer3Firewall(

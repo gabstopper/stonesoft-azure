@@ -4,15 +4,9 @@
     "parameters": {
         "engineUsername": {
             "type": "string",
-            "metadata": {
-                "description" : "Engine username"
-            }
         },
         "sshKey": {
             "type": "string",
-            "metadata": {
-                "description" : "Engine username public ssh key"
-            }
         },
         "engineVMSize": {
             "type": "string",

@@ -95,8 +95,17 @@ def provision_stonesoft(name, vnet=None, location=None):
     return node.initial_contact(as_base64=True)
     
     
-def provision_stonesoft_policy():
-    pass
+def provision_stonesoft_policy(engine_policy):
+    
+    policy = FirewallPolicy.get_or_create(
+        name=engine_policy)
+        
+    task = policy.upload(namespace.resource_group)
+    for percentage in task.wait(timeout=5):
+        logger.info('Stonesoft NGFW Policy upload task: {}%'.format(percentage))
+
+    if not task.success:
+        logger.error(task.last_message)
 
 
 def azure_credentials():
@@ -208,16 +217,9 @@ def create(namespace):
         elapsed_time = result.properties.timestamp - initial_result.properties.timestamp
         logger.info('Elapsed Time: %s (seconds)', elapsed_time.total_seconds())
         
-        policy = FirewallPolicy.get_or_create(
-            name=namespace.engine_policy)
-        
-        task = policy.upload(namespace.resource_group)
-        for percentage in task.wait(timeout=5):
-            logger.info('Stonesoft NGFW Policy upload task: {}%'.format(percentage))
-
-        if not task.success:
-            logger.error(task.last_message)
-
+        if namespace.engine_policy:
+            provision_stonesoft_policy(namespace.engine_policy)
+    
         for k, v in result.properties.outputs.items():
             logger.info('{} -> {}'.format(k, v.get('value')))
              
@@ -322,12 +324,10 @@ if __name__ == '__main__':
         logger.setLevel(logging.CRITICAL)
     
     try:
-        c = azure_credentials()
+        azure_credentials()
     except KeyError:
         raise Exception(
             'Unable to find the Azure credentials within the users environment. '
             'See documentation for more info.')
     else:
         namespace.func(namespace)
-
-#At least one resource deployment operation failed. Please list deployment operations for details
